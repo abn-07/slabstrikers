@@ -4,7 +4,22 @@
     <title>SlabStrikers</title>
     <style>
         canvas { background: black; display: block; margin: 0 auto; }
-        body { text-align: center; font-family: sans-serif; }
+        body { text-align: center; font-family: sans-serif; overflow: hidden; }
+        
+        .control-btn {
+            width: 80px; 
+            height: 80px; 
+            font-size: 30px; 
+            border-radius: 50%; 
+            background: rgba(255,255,255,0.2); 
+            border: 2px solid white;
+            color: white;
+            cursor: pointer;
+            user-select: none; 
+        }
+        .control-btn:active {
+            background: rgba(255,255,255,0.5);
+        }
     </style>
 </head>
 <body>
@@ -17,46 +32,70 @@
 
     <canvas id="gameCanvas" width="800" height="600" style="display:none;"></canvas>
 
+    <div id="mobileControls" style="display:none; position: fixed; bottom: 20px; width: 100%; justify-content: space-between; padding: 0 50px; box-sizing: border-box;">
+        <button id="btnLeft" class="control-btn">⬅️</button>
+        <button id="btnRight" class="control-btn">➡️</button>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        socket.on('maintenance', () => {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'none';
+            document.getElementById('mobileControls').style.display = 'none';
+            
+            document.body.innerHTML = `
+                <h1 style="color: red; margin-top: 20%;">⚠️ UNDER MAINTENANCE ⚠️</h1>
+                <p>We are updating SlabStrikers with mobile support.</p>
+                <p>Please check back later!</p>
+            `;
+        });
+
         function joinGame() {
             const roomName = document.getElementById('roomInput').value;
             socket.emit('joinRoom', roomName);
+            
             document.getElementById('loginScreen').style.display = 'none';
             canvas.style.display = 'block';
+            
+            document.getElementById('mobileControls').style.display = 'flex';
         }
 
-        // *** UPDATED: Now receiving the whole game state ***
         socket.on('updateState', (gameState) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 1. Draw Players
             const players = gameState.players;
             for (let id in players) {
                 const p = players[id];
                 ctx.fillStyle = 'white';
-                ctx.fillRect(p.x, p.y, 100, 20); 
+                ctx.fillRect(p.x, p.y, p.width, p.height); 
             }
 
-            // 2. Draw Ball (New!)
             const ball = gameState.ball;
             if (ball) {
                 ctx.fillStyle = 'red';
-                ctx.fillRect(ball.x, ball.y, 15, 15); // Draw a 15x15 red box
+                ctx.fillRect(ball.x, ball.y, ball.width, ball.height);
             }
         });
 
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'ArrowLeft') {
-                socket.emit('playerInput', 'left');
-            } else if (event.code === 'ArrowRight') {
-                socket.emit('playerInput', 'right');
-            }
+            if (event.code === 'ArrowLeft') socket.emit('playerInput', 'left');
+            else if (event.code === 'ArrowRight') socket.emit('playerInput', 'right');
         });
+
+        const btnLeft = document.getElementById('btnLeft');
+        const btnRight = document.getElementById('btnRight');
+        function sendMove(dir) {
+            socket.emit('playerInput', dir);
+        }
+
+        btnLeft.addEventListener('click', () => sendMove('left'));
+        btnRight.addEventListener('click', () => sendMove('right'));
+        btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); sendMove('left'); });
+        btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); sendMove('right'); });
     </script>
 </body>
 </html>
