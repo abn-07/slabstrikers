@@ -6,6 +6,7 @@
         canvas { background: black; display: block; margin: 0 auto; }
         body { text-align: center; font-family: sans-serif; overflow: hidden; }
         
+        
         .control-btn {
             width: 80px; 
             height: 80px; 
@@ -43,6 +44,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        
         socket.on('maintenance', () => {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('gameCanvas').style.display = 'none';
@@ -62,11 +64,13 @@
             document.getElementById('loginScreen').style.display = 'none';
             canvas.style.display = 'block';
             
+            
             document.getElementById('mobileControls').style.display = 'flex';
         }
 
         socket.on('updateState', (gameState) => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             const players = gameState.players;
             for (let id in players) {
                 const p = players[id];
@@ -88,12 +92,14 @@
 
         const btnLeft = document.getElementById('btnLeft');
         const btnRight = document.getElementById('btnRight');
+
         function sendMove(dir) {
             socket.emit('playerInput', dir);
         }
 
         btnLeft.addEventListener('click', () => sendMove('left'));
         btnRight.addEventListener('click', () => sendMove('right'));
+
         btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); sendMove('left'); });
         btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); sendMove('right'); });
     </script>
