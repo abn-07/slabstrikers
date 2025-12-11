@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SlabStrikers</title>
+    <style>
+        canvas { background: black; display: block; margin: 0 auto; }
+        body { text-align: center; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <h1>SlabStrikers Arena</h1>
+    
+    <div id="loginScreen">
+        <input id="roomInput" type="text" placeholder="Enter Room Name">
+        <button onclick="joinGame()">Join Game</button>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600" style="display:none;"></canvas>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function joinGame() {
+            const roomName = document.getElementById('roomInput').value;
+            socket.emit('joinRoom', roomName);
+            document.getElementById('loginScreen').style.display = 'none';
+            canvas.style.display = 'block';
+        }
+
+        // *** UPDATED: Now receiving the whole game state ***
+        socket.on('updateState', (gameState) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Players
+            const players = gameState.players;
+            for (let id in players) {
+                const p = players[id];
+                ctx.fillStyle = 'white';
+                ctx.fillRect(p.x, p.y, 100, 20); 
+            }
+
+            // 2. Draw Ball (New!)
+            const ball = gameState.ball;
+            if (ball) {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(ball.x, ball.y, 15, 15); // Draw a 15x15 red box
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'ArrowLeft') {
+                socket.emit('playerInput', 'left');
+            } else if (event.code === 'ArrowRight') {
+                socket.emit('playerInput', 'right');
+            }
+        });
+    </script>
+</body>
+</html>
