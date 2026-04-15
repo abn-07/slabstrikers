@@ -1,5 +1,7 @@
 # SlabStrikers 🏓
 
+**[🎮 Play the live game here!](https://slabstrikers-a.onrender.com)**
+
 A real-time, competitive 2-player multiplayer paddle game built with Node.js, Express, and Socket.io. 
 
 ## Features
