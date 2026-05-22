@@ -1,292 +1,456 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SlabStrikers</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background: #0a0a0f;
-            color: white;
-            text-align: center;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-        }
-        h1 {
-            padding: 12px 0 6px;
-            font-size: 1.6rem;
-            letter-spacing: 3px;
-            color: #e0e0ff;
-            text-shadow: 0 0 12px rgba(120,100,255,0.8);
-        }
-        #statusBar {
-            font-size: 0.85rem;
-            color: #aaa;
-            min-height: 20px;
-            margin-bottom: 4px;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 4px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlabStrikers Arena</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080812;color:#e0e0ff;font-family:'Inter',sans-serif;min-height:100vh;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(108,92,231,.15) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(0,206,201,.1) 0%,transparent 50%);pointer-events:none}
 
-        /* Login screen */
-        #loginScreen {
-            margin-top: 80px;
-        }
-        #loginScreen input {
-            padding: 10px 16px;
-            font-size: 1rem;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #1a1a2e;
-            color: white;
-            outline: none;
-            width: 220px;
-        }
-        #loginScreen input:focus { border-color: #7060ff; }
-        #loginScreen button {
-            padding: 10px 20px;
-            margin-left: 8px;
-            font-size: 1rem;
-            border-radius: 8px;
-            background: #5040cc;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        #loginScreen button:hover { background: #6050ee; }
-        #joinError {
-            color: #ff6060;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            min-height: 20px;
-        }
+/* SCREENS */
+.screen{display:none;width:100%;max-width:480px;padding:24px;animation:fadeIn .35s ease}
+.screen.active{display:flex;flex-direction:column;align-items:center;gap:16px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-        /* Mobile controls */
-        .control-btn {
-            width: 80px;
-            height: 80px;
-            font-size: 28px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.12);
-            border: 2px solid rgba(255,255,255,0.4);
-            color: white;
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: background 0.1s;
-        }
-        .control-btn:active { background: rgba(255,255,255,0.35); }
-        #mobileControls {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            justify-content: space-between;
-            padding: 0 50px;
-        }
-    </style>
+/* LOGO */
+.logo{font-size:2rem;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#a29bfe,#6c5ce7,#fd79a8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none}
+.logo-sub{font-size:.75rem;letter-spacing:6px;color:#6c5ce7;text-transform:uppercase;margin-top:-10px}
+
+/* CARD */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;width:100%;backdrop-filter:blur(10px)}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:10px;padding:4px;width:100%}
+.tab{flex:1;padding:9px;border:none;border-radius:8px;background:transparent;color:#888;font-family:inherit;font-size:.85rem;cursor:pointer;transition:.2s}
+.tab.active{background:#6c5ce7;color:#fff;font-weight:600}
+
+/* INPUTS */
+.field{display:flex;flex-direction:column;gap:6px;width:100%}
+.field label{font-size:.78rem;color:#888;letter-spacing:.5px}
+.field input{padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#fff;font-family:inherit;font-size:.95rem;outline:none;transition:.2s}
+.field input:focus{border-color:#6c5ce7;background:rgba(108,92,231,.1)}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;border:none;border-radius:12px;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.5px}
+.btn-primary{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.btn-secondary{background:rgba(255,255,255,.07);color:#ccc;border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-teal{background:linear-gradient(135deg,#00cec9,#00b894);color:#fff}
+.btn-teal:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,206,201,.35)}
+.btn-pink{background:linear-gradient(135deg,#fd79a8,#e84393);color:#fff}
+.btn-pink:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(253,121,168,.35)}
+.btn-sm{width:auto;padding:8px 18px;font-size:.82rem}
+
+/* ERROR */
+.err{color:#ff6b8a;font-size:.82rem;min-height:18px;text-align:center}
+
+/* MAIN MENU */
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.menu-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:.25s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.menu-card:hover{transform:translateY(-4px);border-color:rgba(108,92,231,.5);background:rgba(108,92,231,.1)}
+.menu-icon{font-size:2rem}
+.menu-label{font-size:.85rem;font-weight:600;color:#ccc}
+.user-bar{display:flex;align-items:center;justify-content:space-between;width:100%;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.07)}
+.user-info{display:flex;flex-direction:column}
+.user-name{font-weight:700;font-size:.95rem}
+.user-stats{font-size:.72rem;color:#888}
+
+/* ROOM CODE */
+.code-display{background:rgba(108,92,231,.15);border:2px dashed rgba(108,92,231,.5);border-radius:14px;padding:20px;text-align:center;width:100%}
+.room-code{font-size:2.4rem;font-weight:900;letter-spacing:8px;color:#a29bfe;font-family:monospace}
+.code-hint{font-size:.78rem;color:#888;margin-top:6px}
+
+/* LEADERBOARD */
+.lb-row{display:grid;grid-template-columns:32px 1fr 60px 60px 50px;gap:8px;align-items:center;padding:10px 12px;border-radius:10px;font-size:.83rem}
+.lb-row.header{color:#888;font-size:.72rem;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:8px}
+.lb-row:not(.header):nth-child(odd){background:rgba(255,255,255,.03)}
+.rank-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem}
+.r1{background:linear-gradient(135deg,#f9ca24,#f0932b);color:#000}
+.r2{background:linear-gradient(135deg,#dfe6e9,#b2bec3);color:#000}
+.r3{background:linear-gradient(135deg,#e17055,#d63031);color:#fff}
+.rx{background:rgba(255,255,255,.1);color:#888}
+.lb-scroll{width:100%;max-height:340px;overflow-y:auto}
+
+/* GAME SCREEN */
+#gameScreen{max-width:820px;padding:0}
+.game-top{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 12px}
+.game-title{font-size:1rem;font-weight:700;letter-spacing:3px;color:#a29bfe}
+canvas{display:block;border:1px solid rgba(255,255,255,.08);border-radius:8px}
+.game-status{font-size:.78rem;color:#888;min-height:18px;text-align:center;padding:4px}
+
+/* MOBILE */
+.mobile-btns{display:none;gap:40px;margin-top:8px}
+.ctrl{width:72px;height:72px;font-size:24px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3);color:#fff;cursor:pointer}
+.ctrl:active{background:rgba(255,255,255,.3)}
+@media(max-width:500px){canvas{width:100vw;height:auto}.mobile-btns{display:flex}}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.overlay-box{background:#0f0f1e;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;width:min(480px,95vw);max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+
+/* JOIN CODE INPUT */
+.code-input{font-size:1.6rem;font-weight:700;letter-spacing:6px;text-align:center;text-transform:uppercase;font-family:monospace}
+
+hr{border:none;border-top:1px solid rgba(255,255,255,.07);width:100%}
+</style>
 </head>
 <body>
-    <h1>⚡ SlabStrikers Arena</h1>
-    <div id="statusBar"></div>
 
-    <div id="loginScreen">
-        <input id="roomInput" type="text" placeholder="Enter Room Name" maxlength="20">
-        <button onclick="joinGame()">Join Game</button>
-        <div id="joinError"></div>
+<!-- AUTH SCREEN -->
+<div class="screen active" id="authScreen">
+  <div class="logo">⚡ SLABSTRIKERS</div>
+  <div class="logo-sub">Arena</div>
+  <div class="card" style="gap:16px;display:flex;flex-direction:column">
+    <div class="tabs">
+      <button class="tab active" id="tabLogin" onclick="switchTab('login')">Login</button>
+      <button class="tab" id="tabReg" onclick="switchTab('reg')">Register</button>
     </div>
+    <div class="field"><label>USERNAME</label><input id="authUser" placeholder="Enter username" autocomplete="username"></div>
+    <div class="field"><label>PASSWORD</label><input id="authPass" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+    <div class="err" id="authErr"></div>
+    <button class="btn btn-primary" id="authBtn" onclick="doAuth()">Login</button>
+  </div>
+</div>
 
-    <canvas id="gameCanvas" width="800" height="600" style="display:none;"></canvas>
-
-    <div id="mobileControls">
-        <button id="btnLeft" class="control-btn">⬅️</button>
-        <button id="btnRight" class="control-btn">➡️</button>
+<!-- MAIN MENU -->
+<div class="screen" id="menuScreen">
+  <div class="logo">⚡ SLABSTRIKERS</div>
+  <div class="user-bar" style="width:100%;max-width:480px">
+    <div class="user-info">
+      <span class="user-name" id="menuUsername"></span>
+      <span class="user-stats" id="menuStats"></span>
     </div>
+    <button class="btn btn-secondary btn-sm" onclick="logout()">Logout</button>
+  </div>
+  <div class="menu-grid" style="max-width:480px">
+    <div class="menu-card" onclick="createRoom()">
+      <div class="menu-icon">🎮</div><div class="menu-label">Create Room</div>
+    </div>
+    <div class="menu-card" onclick="showJoinScreen()">
+      <div class="menu-icon">🔑</div><div class="menu-label">Join Room</div>
+    </div>
+    <div class="menu-card" onclick="playVsBot()">
+      <div class="menu-icon">🤖</div><div class="menu-label">Play vs Bot</div>
+    </div>
+    <div class="menu-card" onclick="showLeaderboard()">
+      <div class="menu-icon">🏆</div><div class="menu-label">Leaderboard</div>
+    </div>
+  </div>
+  <div class="err" id="menuErr"></div>
+</div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const statusBar = document.getElementById('statusBar');
+<!-- CREATE ROOM SCREEN -->
+<div class="screen" id="createScreen">
+  <div class="logo" style="font-size:1.4rem">Room Created</div>
+  <div class="card" style="gap:16px;display:flex;flex-direction:column;align-items:center">
+    <p style="color:#888;font-size:.85rem;text-align:center">Share this code with your friend</p>
+    <div class="code-display">
+      <div class="room-code" id="displayedCode">------</div>
+      <div class="code-hint">Room Code</div>
+    </div>
+    <button class="btn btn-secondary" onclick="copyCode()">📋 Copy Code</button>
+    <div style="color:#888;font-size:.82rem" id="createStatus">⏳ Waiting for opponent...</div>
+    <button class="btn btn-secondary" onclick="goMenu()">← Back to Menu</button>
+  </div>
+</div>
 
-        let mySocketId = null;
-        socket.on('connect', () => { mySocketId = socket.id; });
+<!-- JOIN SCREEN -->
+<div class="screen" id="joinScreen">
+  <div class="logo" style="font-size:1.4rem">Join Room</div>
+  <div class="card" style="gap:16px;display:flex;flex-direction:column">
+    <p style="color:#888;font-size:.85rem;text-align:center">Enter the room code from your friend</p>
+    <div class="field">
+      <label>ROOM CODE</label>
+      <input id="codeInput" class="code-input" placeholder="ABC123" maxlength="6">
+    </div>
+    <div class="err" id="joinErr"></div>
+    <button class="btn btn-primary" onclick="joinByCode()">Join Game</button>
+    <button class="btn btn-secondary" onclick="goMenu()">← Back</button>
+  </div>
+</div>
 
-        // ── Maintenance ──────────────────────────────────────────────
-        socket.on('maintenance', () => {
-            document.body.innerHTML = `
-                <h1 style="color:#ff4444;margin-top:20%">⚠️ UNDER MAINTENANCE ⚠️</h1>
-                <p style="margin-top:12px;color:#aaa">We'll be back soon. Please check back later!</p>
-            `;
-        });
+<!-- GAME SCREEN -->
+<div class="screen" id="gameScreen">
+  <div class="game-top" style="width:100%">
+    <div class="game-title">⚡ SLABSTRIKERS</div>
+    <button class="btn btn-secondary btn-sm" onclick="leaveGame()">Leave</button>
+  </div>
+  <div class="game-status" id="gameStatus"></div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="mobile-btns">
+    <button class="ctrl" id="btnLeft">⬅️</button>
+    <button class="ctrl" id="btnRight">➡️</button>
+  </div>
+</div>
 
-        // ── Join flow ─────────────────────────────────────────────────
-        function joinGame() {
-            const roomName = document.getElementById('roomInput').value.trim();
-            document.getElementById('joinError').textContent = '';
-            if (!roomName) {
-                document.getElementById('joinError').textContent = 'Please enter a room name.';
-                return;
-            }
-            socket.emit('joinRoom', roomName);
-        }
+<!-- LEADERBOARD OVERLAY -->
+<div class="overlay" id="lbOverlay">
+  <div class="overlay-box">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700;font-size:1.1rem">🏆 Leaderboard</div>
+      <button class="btn btn-secondary btn-sm" onclick="closeLb()">✕ Close</button>
+    </div>
+    <hr>
+    <div class="lb-scroll">
+      <div class="lb-row header">
+        <span>#</span><span>Player</span><span style="text-align:right">Wins</span><span style="text-align:right">Games</span><span style="text-align:right">Win%</span>
+      </div>
+      <div id="lbBody"></div>
+    </div>
+  </div>
+</div>
 
-        // Allow Enter key to join
-        document.getElementById('roomInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') joinGame();
-        });
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-        socket.on('joinError', (msg) => {
-            document.getElementById('joinError').textContent = msg;
-        });
+let mySocketId = null;
+let currentTab = 'login';
+let myDisplayName = '';
+let myWins = 0;
+let myGames = 0;
+let isBotGame = false;
+let currentRoomCode = '';
 
-        socket.on('joinSuccess', () => {
-            document.getElementById('loginScreen').style.display = 'none';
-            canvas.style.display = 'block';
-            // Show mobile controls only on touch devices
-            if ('ontouchstart' in window) {
-                document.getElementById('mobileControls').style.display = 'flex';
-            }
-        });
+socket.on('connect', () => { mySocketId = socket.id; });
 
-        socket.on('waitingForPlayer', () => {
-            statusBar.textContent = '⏳ Waiting for opponent to join...';
-            drawWaitingScreen();
-        });
+// ── Auth ──────────────────────────────────────────────────────────
+function switchTab(t) {
+  currentTab = t;
+  document.getElementById('tabLogin').classList.toggle('active', t === 'login');
+  document.getElementById('tabReg').classList.toggle('active', t === 'reg');
+  document.getElementById('authBtn').textContent = t === 'login' ? 'Login' : 'Create Account';
+  document.getElementById('authErr').textContent = '';
+}
 
-        socket.on('gameStart', () => {
-            statusBar.textContent = '🎮 Game started!';
-        });
+function doAuth() {
+  const username = document.getElementById('authUser').value.trim();
+  const password = document.getElementById('authPass').value;
+  document.getElementById('authErr').textContent = '';
+  if (!username || !password) { document.getElementById('authErr').textContent = 'Fill all fields.'; return; }
+  socket.emit(currentTab === 'login' ? 'login' : 'register', { username, password });
+}
+document.getElementById('authUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('authPass').focus(); });
+document.getElementById('authPass').addEventListener('keydown', e => { if (e.key === 'Enter') doAuth(); });
 
-        socket.on('playerLeft', () => {
-            statusBar.textContent = '⚠️ Opponent disconnected. Waiting for new player...';
-            drawWaitingScreen();
-        });
+socket.on('authError', msg => { document.getElementById('authErr').textContent = msg; });
+socket.on('authSuccess', ({ username, wins, gamesPlayed }) => {
+  myDisplayName = username; myWins = wins; myGames = gamesPlayed;
+  document.getElementById('menuUsername').textContent = username;
+  document.getElementById('menuStats').textContent = `${wins} wins · ${gamesPlayed} games played`;
+  showScreen('menuScreen');
+});
 
-        socket.on('gameOver', (winnerId) => {
-            const isWinner = winnerId === mySocketId;
-            const resultMsg = isWinner ? '🏆 YOU WIN!' : '💀 YOU LOSE!';
-            
-            statusBar.innerHTML = `<span style="color: ${isWinner ? '#00ff88' : '#ff4444'};">${resultMsg} Restarting in a few seconds...</span>`;
-            
-            // Draw a big overlay on the canvas
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = isWinner ? '#00ff88' : '#ff4444';
-            ctx.fillStyle = isWinner ? '#aaffcc' : '#ffaaaa';
-            ctx.font = 'bold 50px Segoe UI';
-            ctx.textAlign = 'center';
-            ctx.fillText(resultMsg, canvas.width / 2, canvas.height / 2 + 15);
-            ctx.shadowBlur = 0; // Reset shadow
-        });
+function logout() { myDisplayName = ''; goMenu(); showScreen('authScreen'); }
 
-        // ── Keyboard input with held-key support ──────────────────────
-        const keysHeld = {};
-        document.addEventListener('keydown', (e) => { keysHeld[e.code] = true; });
-        document.addEventListener('keyup', (e) => { keysHeld[e.code] = false; });
+// ── Navigation ────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goMenu() {
+  isBotGame = false;
+  document.getElementById('menuErr').textContent = '';
+  showScreen('menuScreen');
+}
+function showJoinScreen() {
+  document.getElementById('joinErr').textContent = '';
+  document.getElementById('codeInput').value = '';
+  showScreen('joinScreen');
+}
 
-        setInterval(() => {
-            if (keysHeld['ArrowLeft']) socket.emit('playerInput', 'left');
-            if (keysHeld['ArrowRight']) socket.emit('playerInput', 'right');
-        }, 16);
+// ── Room ──────────────────────────────────────────────────────────
+function createRoom() { socket.emit('createRoom'); }
+socket.on('roomCreated', ({ code }) => {
+  currentRoomCode = code;
+  isBotGame = false;
+  document.getElementById('displayedCode').textContent = code;
+  document.getElementById('createStatus').textContent = '⏳ Waiting for opponent...';
+  showScreen('createScreen');
+});
+socket.on('roomError', msg => { document.getElementById('menuErr').textContent = msg; });
 
-        // ── Mobile controls ───────────────────────────────────────────
-        const btnLeft = document.getElementById('btnLeft');
-        const btnRight = document.getElementById('btnRight');
+function copyCode() {
+  navigator.clipboard.writeText(currentRoomCode).then(() => {
+    const btn = event.target;
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Code', 2000);
+  });
+}
 
-        let mobileInterval = null;
-        function startMobileMove(dir) {
-            socket.emit('playerInput', dir);
-            mobileInterval = setInterval(() => socket.emit('playerInput', dir), 16);
-        }
-        function stopMobileMove() {
-            clearInterval(mobileInterval);
-            mobileInterval = null;
-        }
+function joinByCode() {
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  document.getElementById('joinErr').textContent = '';
+  if (code.length < 6) { document.getElementById('joinErr').textContent = 'Enter a 6-character code.'; return; }
+  socket.emit('joinRoomByCode', code);
+}
+document.getElementById('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') joinByCode(); });
 
-        ['mousedown', 'touchstart'].forEach(evt => {
-            btnLeft.addEventListener(evt, (e) => { e.preventDefault(); startMobileMove('left'); });
-            btnRight.addEventListener(evt, (e) => { e.preventDefault(); startMobileMove('right'); });
-        });
-        ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => {
-            btnLeft.addEventListener(evt, stopMobileMove);
-            btnRight.addEventListener(evt, stopMobileMove);
-        });
+socket.on('joinError', msg => {
+  document.getElementById('joinErr').textContent = msg;
+});
+socket.on('joinedRoom', ({ code }) => { currentRoomCode = code; });
 
-        // ── Render ────────────────────────────────────────────────────
-        function drawWaitingScreen() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(255,255,255,0.15)';
-            ctx.font = '24px Segoe UI';
-            ctx.textAlign = 'center';
-            ctx.fillText('Waiting for opponent...', canvas.width / 2, canvas.height / 2);
-        }
+function playVsBot() { isBotGame = true; socket.emit('playVsBot'); }
+socket.on('botGameStart', () => { isBotGame = true; });
 
-        socket.on('updateState', (gameState) => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+socket.on('waitingForPlayer', () => {
+  if (document.getElementById('createScreen').classList.contains('active')) {
+    document.getElementById('createStatus').textContent = '⏳ Waiting for opponent...';
+  }
+  drawWaiting();
+  document.getElementById('gameStatus').textContent = '⏳ Waiting for opponent...';
+});
 
-            // Draw centre dashed line
-            ctx.setLineDash([10, 10]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.lineTo(canvas.width, canvas.height / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+socket.on('gameStart', () => {
+  showScreen('gameScreen');
+  document.getElementById('gameStatus').textContent = isBotGame ? '🤖 Playing vs Bot' : '🎮 Game on!';
+  if ('ontouchstart' in window) document.querySelector('.mobile-btns').style.display = 'flex';
+});
 
-            // Draw scores
-            const scoreEntries = Object.entries(gameState.scores || {});
-            if (scoreEntries.length > 0) {
-                ctx.font = 'bold 28px Segoe UI';
-                ctx.textAlign = 'center';
-                // Top player score (y < 300) shown in upper half
-                // Bottom player score (y >= 300) shown in lower half
-                const players = gameState.players;
-                scoreEntries.forEach(([id, score]) => {
-                    const p = players[id];
-                    if (!p) return;
-                    const isTop = p.y < 300;
-                    const scoreY = isTop ? canvas.height / 2 - 20 : canvas.height / 2 + 40;
-                    const isMe = (id === mySocketId);
-                    ctx.fillStyle = isMe ? 'rgba(120,200,255,0.7)' : 'rgba(255,255,255,0.4)';
-                    ctx.fillText(score, canvas.width / 2, scoreY);
-                });
-            }
+socket.on('gameRestart', () => {
+  document.getElementById('gameStatus').textContent = isBotGame ? '🤖 Playing vs Bot' : '🎮 New round!';
+});
 
-            // Draw paddles with glow
-            const players = gameState.players;
-            for (let id in players) {
-                const p = players[id];
-                const isMe = (id === mySocketId);
-                ctx.shadowColor = isMe ? '#7080ff' : '#ff7060';
-                ctx.shadowBlur = 12;
-                ctx.fillStyle = isMe ? '#a0b0ff' : '#ff9080';
-                ctx.beginPath();
-                ctx.roundRect(p.x, p.y, p.width, p.height, 6);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
+socket.on('playerLeft', () => {
+  document.getElementById('gameStatus').textContent = '⚠️ Opponent left. Waiting...';
+  drawWaiting();
+});
 
-            // Draw ball with glow
-            const ball = gameState.ball;
-            if (ball) {
-                ctx.shadowColor = '#ffffff';
-                ctx.shadowBlur = 16;
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.roundRect(ball.x, ball.y, ball.width, ball.height, 4);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        });
-    </script>
+socket.on('gameOver', ({ winnerId, winnerName, isBot }) => {
+  const isWinner = winnerId === mySocketId;
+  const msg = isWinner ? '🏆 YOU WIN!' : (winnerId === '__bot__' ? '🤖 BOT WINS!' : '💀 YOU LOSE!');
+  document.getElementById('gameStatus').innerHTML = `<span style="color:${isWinner ? '#00ff88' : '#ff4466'}">${msg} Restarting in 4s...</span>`;
+  ctx.fillStyle = 'rgba(0,0,0,.78)';
+  ctx.fillRect(0, 0, 800, 600);
+  ctx.shadowBlur = 20; ctx.shadowColor = isWinner ? '#00ff88' : '#ff4466';
+  ctx.fillStyle = isWinner ? '#aaffcc' : '#ffaabb';
+  ctx.font = 'bold 52px Inter'; ctx.textAlign = 'center';
+  ctx.fillText(msg, 400, 285);
+  ctx.shadowBlur = 0; ctx.font = '22px Inter'; ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.fillText(isWinner ? 'Excellent!' : `${winnerName} wins this round`, 400, 330);
+  // Update local stats display
+  if (!isBot) { if (isWinner) myWins++; myGames++; document.getElementById('menuStats').textContent = `${myWins} wins · ${myGames} games played`; }
+});
+
+function leaveGame() {
+  socket.emit('leaveGame');
+  goMenu();
+}
+
+// ── Input ─────────────────────────────────────────────────────────
+const held = {};
+document.addEventListener('keydown', e => { held[e.code] = true; });
+document.addEventListener('keyup', e => { held[e.code] = false; });
+setInterval(() => {
+  if (!document.getElementById('gameScreen').classList.contains('active')) return;
+  if (held['ArrowLeft'] || held['KeyA']) socket.emit('playerInput', 'left');
+  if (held['ArrowRight'] || held['KeyD']) socket.emit('playerInput', 'right');
+}, 16);
+
+let mInt = null;
+function startMove(d) { socket.emit('playerInput', d); mInt = setInterval(() => socket.emit('playerInput', d), 16); }
+function stopMove() { clearInterval(mInt); mInt = null; }
+['mousedown','touchstart'].forEach(ev => {
+  document.getElementById('btnLeft').addEventListener(ev, e => { e.preventDefault(); startMove('left'); });
+  document.getElementById('btnRight').addEventListener(ev, e => { e.preventDefault(); startMove('right'); });
+});
+['mouseup','mouseleave','touchend','touchcancel'].forEach(ev => {
+  document.getElementById('btnLeft').addEventListener(ev, stopMove);
+  document.getElementById('btnRight').addEventListener(ev, stopMove);
+});
+
+// ── Render ────────────────────────────────────────────────────────
+function drawWaiting() {
+  ctx.clearRect(0, 0, 800, 600);
+  ctx.fillStyle = 'rgba(255,255,255,.12)';
+  ctx.font = '22px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('Waiting for opponent...', 400, 300);
+}
+
+socket.on('updateState', (state) => {
+  ctx.clearRect(0, 0, 800, 600);
+
+  // Centre line
+  ctx.setLineDash([12, 12]); ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, 300); ctx.lineTo(800, 300); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Scores
+  const players = state.players;
+  const scores = state.scores;
+  ctx.font = 'bold 30px Inter'; ctx.textAlign = 'center';
+  for (const id in players) {
+    const p = players[id];
+    const isMe = id === mySocketId;
+    const scoreY = p.y > 300 ? 270 : 340;
+    ctx.fillStyle = isMe ? 'rgba(162,155,254,.8)' : 'rgba(255,255,255,.35)';
+    ctx.fillText(scores[id] ?? 0, 400, scoreY);
+  }
+
+  // Player name labels
+  ctx.font = '12px Inter';
+  for (const id in players) {
+    const p = players[id];
+    const isMe = id === mySocketId;
+    ctx.fillStyle = isMe ? 'rgba(162,155,254,.9)' : 'rgba(255,150,120,.9)';
+    const labelY = p.y > 300 ? p.y + p.height + 16 : p.y - 6;
+    ctx.fillText(p.displayName || 'Player', p.x + p.width / 2, labelY);
+  }
+
+  // Paddles
+  for (const id in players) {
+    const p = players[id];
+    const isMe = id === mySocketId;
+    const isBot = p.isBot;
+    ctx.shadowColor = isBot ? '#fd79a8' : (isMe ? '#a29bfe' : '#ff7060');
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = isBot ? '#fd79a8' : (isMe ? '#a29bfe' : '#ff9080');
+    ctx.beginPath(); ctx.roundRect(p.x, p.y, p.width, p.height, 6); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Ball
+  const ball = state.ball;
+  if (ball) {
+    ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 18;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.roundRect(ball.x, ball.y, ball.width, ball.height, 4); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+});
+
+// ── Leaderboard ───────────────────────────────────────────────────
+function showLeaderboard() {
+  socket.emit('getLeaderboard');
+  document.getElementById('lbOverlay').classList.add('show');
+}
+function closeLb() { document.getElementById('lbOverlay').classList.remove('show'); }
+
+socket.on('leaderboard', (data) => {
+  const rankClasses = ['r1','r2','r3'];
+  document.getElementById('lbBody').innerHTML = data.length === 0
+    ? '<div style="text-align:center;color:#666;padding:20px">No players yet. Be the first!</div>'
+    : data.map(row => `
+      <div class="lb-row">
+        <span><div class="rank-badge ${rankClasses[row.rank-1] || 'rx'}">${row.rank}</div></span>
+        <span style="font-weight:600">${row.username}</span>
+        <span style="text-align:right;color:#a29bfe">${row.wins}</span>
+        <span style="text-align:right;color:#888">${row.gamesPlayed}</span>
+        <span style="text-align:right;color:#00cec9">${row.winRate}%</span>
+      </div>`).join('');
+});
+
+socket.on('maintenance', () => {
+  document.body.innerHTML = '<h1 style="color:#ff4444;margin-top:20%;text-align:center">⚠️ UNDER MAINTENANCE</h1><p style="color:#aaa;text-align:center;margin-top:12px">Back soon!</p>';
+});
+</script>
 </body>
 </html>
